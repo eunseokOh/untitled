@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<!--
+<script ypimweb="{{url_for('static', filename='bootstrap/js/bootstrap.js')}}"></script>
+<script ypimweb="{{url_for('static', filename='jQuery/jquery-3.1.1.js')}}"></script>
+<link rel="stylesheet" href="{{url_for('static',filename='bootstrap/css/bootstrap.css')}}">
+<link rel="stylesheet" href="{{url_for('static',filename='bootstrap/css/bootstrap-theme.css')}}">
+ -->
+<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap-theme.min.css">
+<script src="//code.jquery.com/jquery.min.js"></script>
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+
+<head>
+    <meta charset="UTF-8">
+
+    <title>YPIM</title>
+
+    <script>
+
+        function input_listener(){
+            var value = document.getElementById('query').value
+            console.log(value);
+
+            location.href='/search/q='+value
+        }
+    </script>
+</head>
+<body>
+<center>
+    <div style="width:50%;">
+            <img width="50%" style="margin-top:2%" src="{{url_for('static',filename='img_dir/ano.png')}}" class="img-responsive" />
+            <input id="query" type="text" class="form-control" style="margin-top:2%" placeholder="Keyword" autofocus onkeydown="javascript:if(event.keyCode==13){ input_listener() }">
+    </div>
+</center>
+
+
+</body>
+</html>

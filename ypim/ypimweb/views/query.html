@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<style></style>
+<head>
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap-theme.min.css">
+    <script src="//code.jquery.com/jquery.min.js"></script>
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <title>YPIM</title>
+
+    <script>
+
+        $(document).ready(function(){
+
+            var makeHtml = function(key, val, img){
+
+                if (img == null){
+                    img_href = val['href']
+                }else{
+                    img_href = img
+                }
+
+                var strong = $("<strong />", {
+                    text : val['title']
+                })
+
+                var p = $("<p />",{
+
+                }).append(strong).css('margin-top', '10px').css('height', ' 70px');
+
+                var img = $("<img />", {
+                    src : img_href,
+                    width:"400",
+                    height:"300"
+                })
+
+                var second_div = $("<div />", {}).addClass('thumbnail').css("cursor","pointer")
+
+                second_div.append(img).append(p)
+
+                href = val['href']
+
+                var first_div = $("<div />", {
+                    onclick : "window.open(href)"
+                }).addClass('col-sm-4').append(second_div)
+
+                $('#input_data').append(first_div)
+            }
+
+            $.ajax({
+              url: location.href,
+              type: 'POST'
+            }).done(function( data ) {
+                $.each(data, function(key,val){
+                    $.each(val, function(key_,val_){
+                        $.each(val_, function(key__,val__){
+                            $.each(val__, function(key___,val___){
+                                if ( key__ == "facebook" ){
+                                    img_url = "http://netdna.webdesignerdepot.com/uploads/2015/07/featured_facebook.jpg"
+                                    makeHtml(key___,val___, img_url);
+
+                                }else{
+                                    makeHtml(key___,val___, val___.preview['img']);
+                                }
+                            })
+                        })
+                    })
+
+                })
+           });
+        });
+
+     function input_listener(){
+            var value = document.getElementById('query').value
+            location.href='/search/q='+value
+        }
+</script>
+</head>
+<body style="background:rgb(42,44,43)">
+
+
+<nav class="navbar navbar-fixed-top" style="margin-top:1%">
+    <center>
+        <div style="width:80%">
+            <div class="input-group">
+                <span class="input-group-addon"><i class="glyphicon glyphicon-search"></i></span>
+                <input style="background:rgb(211,206,170)" type="text" id="query" class="form-control input-lg" name="password" autofocus onkeydown="javascript:if(event.keyCode==13){ input_listener() }">
+            </div>
+        </div>
+    </center>
+</nav>
+
+<div class="bg-1" style="margin-top:120px">
+    <div class="container">
+        <div class="row text-center" id="input_data">
+
+
+
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
