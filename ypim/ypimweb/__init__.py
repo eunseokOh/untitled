@@ -1,0 +1,1 @@
+from ypim.ypimweb.models import *

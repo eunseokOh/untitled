@@ -15,13 +15,7 @@
 
         $(document).ready(function(){
 
-            var makeHtml = function(key, val, img){
-
-                if (img == null){
-                    img_href = val['href']
-                }else{
-                    img_href = img
-                }
+            var makeHtml = function(val){
 
                 var strong = $("<strong />", {
                     text : val['title']
@@ -32,7 +26,7 @@
                 }).append(strong).css('margin-top', '10px').css('height', ' 70px');
 
                 var img = $("<img />", {
-                    src : img_href,
+                    src : val['img'],
                     width:"400",
                     height:"300"
                 })
@@ -41,35 +35,43 @@
 
                 second_div.append(img).append(p)
 
-                href = val['href']
 
-                var first_div = $("<div />", {
-                    onclick : "window.open(href)"
-                }).addClass('col-sm-4').append(second_div)
+                $val_href = val['href']
 
-                $('#input_data').append(first_div)
+                var a = $("<a />", {
+                    href : $val_href,
+                    target : "_blank"
+                })
+
+                var first_div = $("<div />", {}).addClass('col-sm-4').append(second_div)
+                a.append(first_div)
+                $('#input_data').append(a)
             }
 
             $.ajax({
               url: location.href,
               type: 'POST'
             }).done(function( data ) {
-                $.each(data, function(key,val){
-                    $.each(val, function(key_,val_){
-                        $.each(val_, function(key__,val__){
-                            $.each(val__, function(key___,val___){
-                                if ( key__ == "facebook" ){
-                                    img_url = "http://netdna.webdesignerdepot.com/uploads/2015/07/featured_facebook.jpg"
-                                    makeHtml(key___,val___, img_url);
+                if( data == "crawler" ){
+                     var strong = $("<strong />", {
+                        text : "{{query}}와 관련된 데이터를 웹에서 수집하고 있습니다. 약 1분 후 다시 검색해주세요.",
 
-                                }else{
-                                    makeHtml(key___,val___, val___.preview['img']);
-                                }
-                            })
-                        })
-                    })
+                    }).css({'color':'white', 'fontSize':'20px'})
+                    $('#input_data').append(strong)
 
-                })
+                } else {
+                    if (data.length > 0){
+                        $.each(data, function(key, val){
+                              makeHtml(val)
+                        }); //end each
+                    } else {
+                        var strong = $("<strong />", {
+                        text : "{{query}}와 관련된 데이터를 웹에서 찾지 못했습니다.",
+
+                        }).css({'color':'white', 'fontSize':'20px'})
+                        $('#input_data').append(strong)
+                    }
+                }
            });
         });
 

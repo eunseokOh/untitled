@@ -1,8 +1,10 @@
 #-*- encoding:utf-8 -*-
 
 from flask import Flask, request, render_template, jsonify
+from ypim.ypimweb.models import db_conn
 from ypim_crawler import *
 
+conn = None
 
 ypimweb = Flask(__name__, template_folder='../views')
 
@@ -27,4 +29,6 @@ def test():
     return render_template('test.html')
 
 if __name__ == "__main__":
+
+
     ypimweb.run(host="192.168.21.69", debug=True)
