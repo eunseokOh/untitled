@@ -314,6 +314,7 @@ if __name__=="__main__":
 
     pool = mp.Pool(processes=4)
     result = pool.map_async(ypim_crawler_facebook, [None])
+    result.ready()
     result = pool.map_async(ypim_crawler_chosun, [None])
-    result.wait()
+    result.ready()
 

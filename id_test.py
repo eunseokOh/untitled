@@ -13,8 +13,8 @@ def count():
 
 
 
-ppservers = tuple('*')
-job_server = pp.Server(ppservers=ppservers)
+
+job_server = pp.Server(ppservers=tuple('*'))
 start_time = time.time()
 f1 = job_server.submit(count)
 res = f1()

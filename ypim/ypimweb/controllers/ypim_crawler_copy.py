@@ -4,8 +4,10 @@ from bs4 import BeautifulSoup
 import mechanize, urllib2, threading, Queue, math
 import multiprocessing as mp
 
-query = None
+from ypim.ypimweb.models import db_conn, model
 
+query = None
+conn = None
 
 class href_preview(threading.Thread):
     def __init__(self, queue, url, broswer=None):
@@ -134,7 +136,7 @@ class YPIMcrawler_nonlogin(threading.Thread):
 ### facebook start ###
 
 class find_facebook(threading.Thread):
-    def __init__(self, req_queue):
+    def __init__(self):
         threading.Thread.__init__(self)
         # req_class, url, header, search_tag, search_attr, search_key, id_tag, pass_tag, id_, pass_
         self.url = 'http://www.facebook.com/login.php'
@@ -143,7 +145,7 @@ class find_facebook(threading.Thread):
         self.id_ = "experiment9090@gmail.com"
         self.pass_ = "ypim9090"
         queue = Queue.Queue()
-        self.req_queue = req_queue
+
 
         # self, queue, url, header, search_tag, search_attr, search_key, id_tag, pass_tag, id_, pass_
         YPIMcrawler_login(queue, self.url, self.header, None, None, None, 'email', 'pass', self.id_, self.pass_).start()
@@ -151,12 +153,13 @@ class find_facebook(threading.Thread):
         self.broswer = queue.get()
 
     def run(self):
-        global query
+        global query, conn, lock
+
         url = "https://www.facebook.com/search/str/" + query + "/keywords_users"
         resp = self.broswer.open(url)  # data = set_cookie_broswer (cookie 값 저장됨)
         html = str(resp.read()).replace("<!--", "").replace("-->", "")
         Soup = BeautifulSoup(html, "html.parser")
-
+        db = model.model(conn)
         # print Soup.prettify()
         data_list = Soup.find_all('div', {"class", "_glj"})
         return_facebook_list = []
@@ -175,13 +178,12 @@ class find_facebook(threading.Thread):
             # title = each_name + ", " +  + ", " + job + ", " + school
 
             title = each_name + "/ " + job + "/ " + school
+            img = "http://www.boatshop24.co.uk/upload/Facebook.png"
+            lock.acquire()
+            face_data = {"web_site":"facebook","href": each_url, "title": title, "img":img}
+            db.tb_detail_insert(query,face_data)
+            lock.release()
 
-            queue = Queue.Queue()
-            href_preview(queue, each_url, self.broswer).start()
-            face_data = {"href": each_url, "title": title, "preview": queue.get()}
-
-            return_facebook_list.append(face_data)
-        self.req_queue.put(return_facebook_list)
         print "facebook_end"
 
 
@@ -189,13 +191,12 @@ class find_facebook(threading.Thread):
 
 ## 조선 일보 ##
 class chosun_find(threading.Thread):
-    def __init__(self, return_queue, board):
+    def __init__(self, board):
         threading.Thread.__init__(self)
         global query
         self.url = "http://search.chosun.com/search/" + board + ".search?query=" + query + "&pageno="
         #
         # self.page = str(page)
-        self.return_queue = return_queue
         req_queue = Queue.Queue()
         YPIMcrawler_nonlogin(req_queue, self.url, None, "div", "class", "result_box").start()  # class
         self.data = req_queue.get()
@@ -215,15 +216,15 @@ class chosun_find(threading.Thread):
 
                 now_page = 1
                 end_page_no = 1
+                db = model.model(conn)
 
                 while (True):
                     if (now_page > total_page_no):
                         break
                     else:
                         print "chosun_find_threading..."
-                        queue = Queue.Queue()
-                        chosun_paging_find(queue, self.url, now_page).start()
-                        return_list.append(queue.get())
+                        chosun_paging_find(self.url, now_page, db).start()
+
                     now_page += 1
                     end_page_no += 1
 
@@ -234,96 +235,98 @@ class chosun_find(threading.Thread):
             except:
                 print "chosun Error"
                 pass
-        self.return_queue.put(return_list)
+
 
 
 class chosun_paging_find(threading.Thread):
-    def __init__(self, queue, url, page):
+    def __init__(self,  url, page, db):
         threading.Thread.__init__(self)
         req_queue = Queue.Queue()
         YPIMcrawler_nonlogin(req_queue, url + str(page), None, "div", "class", "result_box").start()  # class
         self.data = req_queue.get()
-        self.queue = queue
-
+        self.db = db
     def run(self):
-        return_list = []
+        global query,lock
 
         for i in self.data:
             for j in i.section.findAll('dt'):  # title + href
+                img ="http://a687.phobos.apple.com/us/r30/Purple4/v4/1c/cd/c4/1ccdc467-74ba-7c09-7fd9-ea312afd56ba/mzl.dgttzlmr.png"
+                lock.acquire()
+                chosun_data = {"web_site": "chosun", "href": j.a['href'], "title": j.text, "img": img}
+                self.db.tb_detail_insert(query, chosun_data)
+                lock.release()
 
-                return_list.append({'title': j.text, 'href': j.a['href']})
 
-                # print j.text + " = "+ j.a['href']
-
-        self.queue.put(return_list)
 
 
 ## 조선 일보 END ##
 
 ## crawler_pre
-class ypim_crawler_facebook():
-    def __init__(self):
-        pass
+def ypim_crawler_facebook():
 
-    def run(self, req_queue):
-        print "facebook_run"
-        return_list = []
-        queue = Queue.Queue()
-
-        find_facebook(queue).start()
-        fd_list = queue.get()
-        if fd_list:
-            return_list.append({"facebook": fd_list})
-        else:
-            return_list = None
-
-        req_queue.put(return_list)
+    print "facebook_run"
+    find_facebook().start()
 
 
-class ypim_crawler_chosun():
-    def __init__(self):
 
-        pass
+def ypim_crawler_chosun():
 
-    def run(self, req_queue):
-        return_list = []
-        board_list = ["news", "infomain", "photo", "movie", "community", "person", "qna"]
-        chosun_list = []
-        print "chosun_run"
-        for i in board_list:
-            queue = Queue.Queue()
-            chosun_find(queue, i).start()
-            # queue.get()
-            chosun_list.append(queue.get())
-            # print queue.get()
-        if chosun_list[0]:
-            return_list.append({"chosun": chosun_list})
-        else:
-            return_list = None
-        req_queue.put(return_list)
+    board_list = ["news", "infomain", "photo", "movie", "community", "person", "qna"]
+    print "chosun_run"
+    for i in board_list:
+        chosun_find(i).start()
 
 
 ### end
 
+def init(query_):
+    global conn, query, lock
+
+    db = db_conn.db_conn()
+    conn = db.db_conn()
+    query = query_
+    lock = threading.Lock()
 
 class ypim_crawler():
     def __init__(self, query_):
-        global query
-        query = query_.encode("utf-8")
+        self.query = query_.encode("utf-8")
+
+        db = db_conn.db_conn()
+        self.conn = db.db_conn()
 
     def run(self):
-        return_list = []
-        crawler_class_list = [ypim_crawler_facebook()]#, ypim_crawler_chosun()]
+        db = model.model(self.conn)
+        result = db.tb_query_select(self.query)
+        seq_que = result[0]['que_seqno']
 
-        for i in crawler_class_list:
-            queue = Queue.Queue()
-            mp.Process(target=i.run(queue)).start()
-            return_list.append(queue.get())
+        if(seq_que == None):
+            db.tb_query_insert(self.query)
 
-        return return_list
+            crawler_class_list =  [ypim_crawler_chosun, ypim_crawler_facebook]
+            try:
+
+                pool = mp.Pool(initializer=init, initargs=(self.query,))
+                for i in crawler_class_list:
+                    p = pool.apply_async(i)
+                    p.ready()
 
 
+            except Exception as e:
+                print e
 
+            finally:
+                self.conn.close()
+                return "crawler"
+
+        else:
+            query_list = db.tb_detail_select(seq_que)
+            print query_list
+            #print db_list
+            self.conn.close()
+            return query_list
+
+if __name__ == '__main__':
+    mp.freeze_support()
 
         # return return_list
 
