@@ -285,7 +285,7 @@ class ypim_crawler():
         if(seq_que == None):
 
             self.db.tb_query_insert(self.query)
-            crawler_class_list =[ypim_crawler_mlbpark, ypim_crawler_dcinside, ypim_crawler_clien] #[ypim_crawler_ilbe, ypim_crawler_chosun, ypim_crawler_facebook, ypim_crawler_ppomppu, ypim_crawler_todayhumor]  #ypim_crawler_ddanzi#[ypim_crawler_ilbe, ypim_crawler_chosun, ypim_crawler_facebook, ypim_crawler_ppomppu, ypim_crawler_todayhumor, ypim_crawler_inven1, ypim_crawler_inven2, ypim_crawler_inven3, ypim_crawler_inven4, ypim_crawler_inven5, ypim_crawler_inven6, ypim_crawler_inven7, ypim_crawler_inven8, ypim_crawler_inven9, ypim_crawler_inven10, ypim_crawler_inven11, ypim_crawler_inven12]#[ypim_crawler_ilbe, ypim_crawler_chosun, ypim_crawler_facebook, ypim_crawler_ppomppu, ypim_crawler_todayhumor]  #ypim_crawler_ddanzi
+            crawler_class_list = [ypim_crawler_mlbpark, ypim_crawler_dcinside, ypim_crawler_clien,ypim_crawler_ilbe, ypim_crawler_chosun, ypim_crawler_facebook, ypim_crawler_ppomppu, ypim_crawler_todayhumor, ypim_crawler_inven1, ypim_crawler_inven2, ypim_crawler_inven3, ypim_crawler_inven4, ypim_crawler_inven5, ypim_crawler_inven6, ypim_crawler_inven7, ypim_crawler_inven8, ypim_crawler_inven9, ypim_crawler_inven10, ypim_crawler_inven11, ypim_crawler_inven12]#[ypim_crawler_ilbe, ypim_crawler_chosun, ypim_crawler_facebook, ypim_crawler_ppomppu, ypim_crawler_todayhumor]  #ypim_crawler_ddanzi
 
             try:
                 pool = mp.Pool(initializer=init, initargs=(self.query,))
