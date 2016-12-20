@@ -14,12 +14,61 @@
     <script>
 
         $(document).ready(function(){
+            $max_page = -1
+            $now_page = 0
+            $total_cnt = 0
+
+
+
+
+            var group_ajax = function(val){
+
+                if( val == "TOTAL"){
+                    $now_page = 0
+                    $total_cnt = 0
+                    $('#input_data').empty();
+                    $('#groups').empty();
+                    $('#more_btn').hide();
+                    go_ajax()
+                } else {
+                        $.ajax({
+                        url : "groups/q={{query}}/w="+val,
+                        type : 'GET'
+                    }).done(function(data){
+                        if ( data.length > 0 ){
+                            $('#input_data').empty();
+                            $('#more_btn').hide();
+                            $.each(data, function(key, val){
+                                makeHtml(val)
+                            })//end each
+                        }
+                    }); //end ajax
+                } //end if
+            };
+
+            var makeGroupBtns = function(val){
+                var button = $("<button />", {
+                    text : val['web_site'] + " ",
+                    click : function(){
+                        group_ajax(val['web_site'])
+                    }
+                }).addClass('btn btn-default')
+
+                var span = $("<span />", {
+                    text : val['cnt']
+                }).addClass('badge')
+                $total_cnt += val['cnt']
+
+                button.append(span)
+
+                $('#groups').append(button)
+            };
 
             var makeHtml = function(val){
-
                 var strong = $("<strong />", {
                     text : val['title']
                 })
+
 
                 var p = $("<p />",{
 
@@ -48,32 +97,91 @@
                 $('#input_data').append(a)
             }
 
-            $.ajax({
-              url: location.href,
-              type: 'POST'
-            }).done(function( data ) {
-                if( data == "crawler" ){
-                     var strong = $("<strong />", {
-                        text : "{{query}}와 관련된 데이터를 웹에서 수집하고 있습니다. 약 1분 후 다시 검색해주세요.",
+            var groups = function(){
+                $.ajax({
+                    url : "groups/q={{query}}",
+                    type : 'GET'
 
-                    }).css({'color':'white', 'fontSize':'20px'})
-                    $('#input_data').append(strong)
+                }).done(function(data){
+                    if(data.length > 0){
+                        $.each(data, function(key,val){
+                            makeGroupBtns(val)
 
-                } else {
-                    if (data.length > 0){
-                        $.each(data, function(key, val){
-                              makeHtml(val)
-                        }); //end each
-                    } else {
-                        var strong = $("<strong />", {
-                        text : "{{query}}와 관련된 데이터를 웹에서 찾지 못했습니다.",
+                        });//end each
+                        var json = new Object();
+                        json.web_site = 'TOTAL'
+                        json.cnt = $total_cnt
+                        JSON.stringify(json)
+                        makeGroupBtns(json);
 
-                        }).css({'color':'white', 'fontSize':'20px'})
-                        $('#input_data').append(strong)
                     }
-                }
+
+                });//end ajax
+
+            } //end groups
+
+            var go_ajax = function(){
+                $.ajax({
+                    url : "/search/q={{query}}/isfirst"
+                }).done(function(data){
+                    if ( data == null ) {
+                            var strong = $("<strong />", {
+                                    text : "{{query}} 관련된 데이터를 웹에서 수집하고 있습니다. 약 5분 후 다시 검색해주세요.",
+
+                                }).css({'color':'white', 'fontSize':'20px'})
+                         $('#input_data').append(strong)
+                    }
+                })
+                        $now_page += 1
+
+                        $.ajax({
+                          url: location.href,
+                          type: 'POST',
+                          data: {"page":$now_page},
+                          dataType : 'json'
+                        }).done(function( data ) {
+
+                                if (data.length > 0){
+
+                                    $max_page = data[0]['max_page']
+
+                                    if( $now_page == 1 ){
+                                        groups()
+                                    }
+                                    if (  data[0]['max_page'] > 1  ){
+                                       $('#more_btn').show()
+                                    }
+
+                                    $.each(data, function(key, val){
+                                          makeHtml(val)
+                                    }); //end each
+
+                                } else {
+                                    var strong = $("<strong />", {
+                                    text : "{{query}} 관련된 데이터를 웹에서 찾지 못했습니다.",
+
+                                    }).css({'color':'white', 'fontSize':'20px'})
+                                    $('#input_data').append(strong)
+                                }
+
+
+                               if (  $now_page >= $max_page ){
+                                $('#more_btn').hide()
+                                $now_page = $max_page
+                               }
+                       });
+                }//end go_ajax
+                $('#more_btn').hide()
+                go_ajax()
+
+
+                $('#more_btn').click(function(){
+                    go_ajax()
+                });
+
+
            });
-        });
+
 
      function input_listener(){
             var value = document.getElementById('query').value
@@ -82,28 +190,38 @@
 </script>
 </head>
 <body style="background:rgb(42,44,43)">
-
-
+<div id="page">
 <nav class="navbar navbar-fixed-top" style="margin-top:1%">
+
+
     <center>
+
         <div style="width:80%">
             <div class="input-group">
                 <span class="input-group-addon"><i class="glyphicon glyphicon-search"></i></span>
-                <input style="background:rgb(211,206,170)" type="text" id="query" class="form-control input-lg" name="password" autofocus onkeydown="javascript:if(event.keyCode==13){ input_listener() }">
+                <input style="background:rgb(184,174,156)" type="text" id="query" class="form-control input-lg" name="password" autofocus onkeydown="javascript:if(event.keyCode==13){ input_listener() }">
             </div>
         </div>
-    </center>
-</nav>
 
-<div class="bg-1" style="margin-top:120px">
-    <div class="container">
-        <div class="row text-center" id="input_data">
-
+        <div class="btn-group" style="margin-top:1%" id="groups">
 
 
         </div>
+
+    </center>
+
+
+</nav>
+
+<div class="bg-1" style="margin-top:130px">
+    <div class="container">
+        <div class="row text-center" id="input_data">
+        </div>
+        <center>
+            <button id="more_btn" type="button" class="btn btn-default" style="width:40%; margin-top:1%; margin-bottom:2%">MORE</button>
+        </center>
     </div>
 </div>
-
+</div>
 </body>
 </html>
