@@ -43,13 +43,14 @@ def query(query):
     if (request.method == 'GET'):
         global requestCount
         requestCount += 1
-        server_list = []
-        server_list_cnt = requestCount % 5
+        server_list = ['http://192.168.21.35:5000/search/q=','http://192.168.21.35:5000/search/q=','http://192.168.21.35:5000/search/q=','http://192.168.21.35:5000/search/q=']
+        server_list_cnt = requestCount % 4
         #server_list_cnt == 0
-        if (True):
+        if (server_list_cnt == 0):
             return render_template('query.html', query=query)
         else:
-            return redirect("http://www.naver.com")
+            print "redirect" + server_list[server_list_cnt]
+            return redirect(server_list[server_list_cnt]+query)
 
     elif (request.method == 'POST'):
         req_Data = request.get_data()
@@ -65,4 +66,4 @@ def test():
     return render_template('test.html')
 
 if __name__ == "__main__":
-    ypimweb.run(host="localhost", debug=True)
+    ypimweb.run(host="192.168.21.35", debug=True)
