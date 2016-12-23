@@ -3,6 +3,9 @@
 
 <style></style>
 <head>
+    <script src="{{url_for('static', filename='sweetalert/sweetalert.min.js')}}"></script>
+    <link href="{{url_for('static', filename='sweetalert/sweetalert.css')}}" rel="stylesheet">
+
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap-theme.min.css">
     <script src="//code.jquery.com/jquery.min.js"></script>
@@ -18,6 +21,137 @@
             $now_page = 0
             $total_cnt = 0
 
+            var lastScroll = 0;
+
+            var makeTable = function(keys, values){
+                    var tr = $("<tr />", {});
+
+                    var td_url_scanner = $("<td />", {
+                        text : keys
+                    });
+
+                    var td_detected = $("<td />", {
+                        text : values['detected']
+                    });
+
+                    var td_result = $("<td />", {
+                        text : values['result']
+                    });
+
+                    detail_href = values['detail']
+
+                    if(detail_href != null && detail_href.length > 70){
+                       detail_href = detail_href.substring(0,60) + "..."
+                    }
+
+                    detail_link = $("<a />", {
+                        href : values['detail'],
+                        text : detail_href
+                    })
+
+                    td_detail = $("<td />", {
+
+                    }).append(detail_link);
+
+                    tr.append(td_url_scanner).append(td_detected).append(td_result).append(td_detail)
+
+                    if ( values['detected'] != false ){
+                        td_url_scanner.css({"color":"red", "cursor":"pointer"})
+                        td_detected.css({"color":"red", "cursor":"pointer"})
+
+                        vir_url = "http://blog.virustotal.com/search?q="+keys
+                        td_url_scanner.attr('onclick', 'window.open("'+vir_url+'")');
+                        td_detected.attr('onclick', 'window.open("'+vir_url+'")');
+
+                    }
+
+                    if ( values['result'] != 'clean site' ){
+                        td_url_scanner.css({"color":"red", "cursor":"pointer"})
+                        td_result.css({"color":"red", "cursor":"pointer"})
+
+                        vir_url = "http://blog.virustotal.com/search?q="+keys
+                        td_result.attr('onclick', 'window.open("'+vir_url+'")');
+                        td_url_scanner.attr('onclick', 'window.open("'+vir_url+'")');
+                    }
+
+                    $('#virus_info_tbody').append(tr)
+
+            }
+
+            $(document).on("click",".cls_vir",function(){
+
+                this_url = $(this).attr("alt")
+                text_url = this_url
+
+                if ( text_url.length > 80 ){
+                       text_url = text_url.substring(0,80)+"..."
+                }
+                swal({
+                      title: "URL 악성코드 분석",
+                      text: text_url+"\n\n웹 사이트에 접속하기 전에 악성 코드를 검사해보시겠습니까?",
+                      type: "warning",
+                      showCancelButton: true,
+                      confirmButtonColor: "#DD6B55",
+                      confirmButtonText: "검사할래요",
+                      cancelButtonText: "사이트로 이동할래요",
+                      closeOnConfirm: false,
+                      closeOnCancel: false
+                    },
+                    function(isConfirm){
+                      if (isConfirm) {
+                           swal({
+                              title: "ANALYZING..",
+                              imageUrl: "{{url_for('static',filename='img_dir/cat.gif')}}",
+                              imageSize : "200x200",
+                              showConfirmButton : false
+                            });
+
+                           $.ajax({
+                                url:"/urlvirus",
+                                data: this_url,
+                                type:"POST"
+                           }).done(function(data){
+
+                                if (data != "Virus total app key Error"){
+                                    var data_string = ""
+                                    var data_scans = "======================================================================================================================= \n"
+                                    $.each(data, function(key, val){
+
+                                              if(key != 'scans'){
+                                                  data_string += key + " = " + val +"\n"
+                                              } else {
+                                                    $.each(val, function(key_, val_){
+                                                          makeTable(key_, val_);
+                                                    });
+                                              }// end if
+                                    });
+                                    swal.close();
+                                    info_virus(data_string, this_url);
+                               }else{
+                                    swal("ERROR!", data, "error");
+                               }
+                           }) //end ajax
+
+                      } else {
+                        swal.close();
+                        window.open(this_url)
+
+                      }
+                });
+            }); //end vir
+
+             var info_virus = function(data, url){
+                           var text_url = url
+                           $('#virus_info_body').empty()
+                           $('#virus_info_header').empty()
+                            if ( text_url.length > 100 ){
+                                text_url = text_url.substring(0,100)+"..."
+                            }
+                           $('#virus_info_body').append(data)
+                           $('#virus_info_header').append(text_url)
+                           $('#btn_go_website').attr('onclick', 'window.open("'+url+'")');
+                           $('#virus_info').modal('show')
+             }
 
 
 
@@ -72,10 +206,11 @@
 
                 var p = $("<p />",{
 
-                }).append(strong).css('margin-top', '10px').css('height', ' 70px');
+                }).append(strong).css('margin-top', '10px').css('height', ' 140px');
+
 
                 var img = $("<img />", {
-                    src : val['img'],
+                    src : "/static/img_dir/"+val['img'],
                     width:"400",
                     height:"300"
                 })
@@ -88,12 +223,15 @@
                 $val_href = val['href']
 
                 var a = $("<a />", {
-                    href : $val_href,
-                    target : "_blank"
+                    class : "cls_vir",
+                    alt : $val_href
                 })
 
-                var first_div = $("<div />", {}).addClass('col-sm-4').append(second_div)
+                var first_div = $("<div />", {
+
+                }).addClass('col-sm-4').append(second_div)
                 a.append(first_div)
+
                 $('#input_data').append(a)
             }
 
@@ -124,9 +262,10 @@
                 $.ajax({
                     url : "/search/q={{query}}/isfirst"
                 }).done(function(data){
-                    if ( data == null ) {
+                    console.log(data)
+                    if ( data == 'None' ) {
                             var strong = $("<strong />", {
-                                    text : "{{query}} 관련된 데이터를 웹에서 수집하고 있습니다. 약 5분 후 다시 검색해주세요.",
+                                    text : "{{query}} 관련된 데이터를 웹에서 수집하고 있습니다. 약 1분 후 다시 검색해주세요.",
 
                                 }).css({'color':'white', 'fontSize':'20px'})
                          $('#input_data').append(strong)
@@ -158,7 +297,7 @@
 
                                 } else {
                                     var strong = $("<strong />", {
-                                    text : "{{query}} 관련된 데이터를 웹에서 찾지 못했습니다.",
+                                    text : "{{query}}와 관련된 데이터를 웹에서 찾지 못했습니다.",
 
                                     }).css({'color':'white', 'fontSize':'20px'})
                                     $('#input_data').append(strong)
@@ -190,38 +329,74 @@
 </script>
 </head>
 <body style="background:rgb(42,44,43)">
-<div id="page">
-<nav class="navbar navbar-fixed-top" style="margin-top:1%">
 
+<div class="modal fade" id="virus_info" role="dialog">
+    <div class="modal-dialog modal-lg">
 
-    <center>
+        <div class="modal-content">
+            <div class="modal-header" >
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h5 id="virus_info_header"></h5>
+                <h4 class="modal-title"> <strong> 악성코드 분석 결과</strong></h4>
+            </div>
+            <div class="modal-body" >
 
-        <div style="width:80%">
-            <div class="input-group">
-                <span class="input-group-addon"><i class="glyphicon glyphicon-search"></i></span>
-                <input style="background:rgb(184,174,156)" type="text" id="query" class="form-control input-lg" name="password" autofocus onkeydown="javascript:if(event.keyCode==13){ input_listener() }">
+                <pre id="virus_info_body"></pre>
+            </div>
+
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th>URL Scanner</th>
+                    <th>Detected</th>
+                    <th>Result</th>
+                    <th>Detail</th>
+                </tr>
+                </thead>
+                <tbody id="virus_info_tbody">
+
+                </tbody>
+            </table>
+
+            <div class="modal-footer" id="virus_info_footer">
+
+                <button type="button" class="btn btn-default" data-dismiss="modal">CLOSE</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal" id="btn_go_website">GO WEBSITE</button>
             </div>
         </div>
-
-        <div class="btn-group" style="margin-top:1%" id="groups">
-
-
-        </div>
-
-    </center>
-
-
-</nav>
-
-<div class="bg-1" style="margin-top:130px">
-    <div class="container">
-        <div class="row text-center" id="input_data">
-        </div>
-        <center>
-            <button id="more_btn" type="button" class="btn btn-default" style="width:40%; margin-top:1%; margin-bottom:2%">MORE</button>
-        </center>
     </div>
 </div>
+
+<div id="page">
+    <nav class="navbar navbar-fixed-top" style="margin-top:1%">
+        <center>
+            <div style="width:80%">
+                <div class="input-group">
+                    <span class="input-group-addon"><i class="glyphicon glyphicon-search"></i></span>
+                    <input style="background:rgb(184,174,156)" type="text" id="query" class="form-control input-lg" name="password" autofocus onkeydown="javascript:if(event.keyCode==13){ input_listener() }">
+                </div>
+            </div>
+
+            <div class="btn-group" style="margin-top:1%" id="groups">
+
+            </div>
+        </center>
+
+    </nav>
+
+    <div class="bg-1" style="margin-top:130px">
+        <div class="container">
+
+            <div class="row text-center" id="input_data">
+            </div>
+            <center>
+                <button id="more_btn" type="button" class="btn btn-default" style="width:40%; margin-top:1%; margin-bottom:2%">MORE</button>
+            </center>
+        </div>
+    </div>
 </div>
+
+
+
 </body>
 </html>

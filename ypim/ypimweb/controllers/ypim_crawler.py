@@ -1,8 +1,9 @@
 # -*- encoding:utf-8 -*-
 
 import multiprocessing as mp, math
-from website import find_facebook, chosun_find, init, ddanzi_find, ppomppu_find, todayhumor_find, inven_find, ilbe_find, mlbpark_find, dcinside_find, clien_find
+from website import find_facebook, chosun_find, init, ddanzi_find, ppomppu_find, todayhumor_find, inven_find, ilbe_find, mlbpark_find, dcinside_find, clien_find, bing_find, yahoo_find, DOTAX_find, jobkorea_find
 from ypim.ypimweb.models import db_conn, model
+from threading import Thread
 
 conn_ = None
 
@@ -44,8 +45,7 @@ def ypim_crawler_ilbe():
         ilbe_find(i).start()
 
 def ypim_crawler_inven1():
-    db = db_conn.db_conn()
-    conn = db.db_conn()
+    conn = db_conn.db_conn()
 
     model_ = model.model(conn)
     return_list = model_.tb_url_detail_select("inven", 1)
@@ -60,8 +60,7 @@ def ypim_crawler_inven1():
             inven_find(model_, j, i).start()
 
 def ypim_crawler_inven2():
-    db = db_conn.db_conn()
-    conn = db.db_conn()
+    conn = db_conn.db_conn()
 
     model_ = model.model(conn)
     return_list = model_.tb_url_detail_select("inven", 2)
@@ -78,8 +77,7 @@ def ypim_crawler_inven2():
             inven_find(model_,j, i).start()
 
 def ypim_crawler_inven3():
-    db = db_conn.db_conn()
-    conn = db.db_conn()
+    conn = db_conn.db_conn()
 
     model_ = model.model(conn)
     return_list = model_.tb_url_detail_select("inven", 3)
@@ -95,8 +93,7 @@ def ypim_crawler_inven3():
 
 
 def ypim_crawler_inven4():
-    db = db_conn.db_conn()
-    conn = db.db_conn()
+    conn = db_conn.db_conn()
 
     model_ = model.model(conn)
     return_list = model_.tb_url_detail_select("inven", 4)
@@ -111,8 +108,7 @@ def ypim_crawler_inven4():
             inven_find(model_, j, i).start()
 
 def ypim_crawler_inven5():
-    db = db_conn.db_conn()
-    conn = db.db_conn()
+    conn = db_conn.db_conn()
 
     model_ = model.model(conn)
     return_list = model_.tb_url_detail_select("inven", 5)
@@ -128,8 +124,7 @@ def ypim_crawler_inven5():
             inven_find(model_, j, i).start()
 
 def ypim_crawler_inven6():
-    db = db_conn.db_conn()
-    conn = db.db_conn()
+    conn = db_conn.db_conn()
 
     model_ = model.model(conn)
     return_list = model_.tb_url_detail_select("inven", 6)
@@ -145,8 +140,7 @@ def ypim_crawler_inven6():
             inven_find(model_, j, i).start()
 
 def ypim_crawler_inven7():
-    db = db_conn.db_conn()
-    conn = db.db_conn()
+    conn = db_conn.db_conn()
 
     model_ = model.model(conn)
     return_list = model_.tb_url_detail_select("inven", 7)
@@ -162,8 +156,7 @@ def ypim_crawler_inven7():
             inven_find(model_, j, i).start()
 
 def ypim_crawler_inven8():
-    db = db_conn.db_conn()
-    conn = db.db_conn()
+    conn = db_conn.db_conn()
 
     model_ = model.model(conn)
     return_list = model_.tb_url_detail_select("inven", 8)
@@ -179,8 +172,7 @@ def ypim_crawler_inven8():
             inven_find(model_, j, i).start()
 
 def ypim_crawler_inven9():
-    db = db_conn.db_conn()
-    conn = db.db_conn()
+    conn = db_conn.db_conn()
 
     model_ = model.model(conn)
     return_list = model_.tb_url_detail_select("inven", 9)
@@ -196,8 +188,7 @@ def ypim_crawler_inven9():
             inven_find(model_, j, i).start()
 
 def ypim_crawler_inven10():
-    db = db_conn.db_conn()
-    conn = db.db_conn()
+    conn = db_conn.db_conn()
 
     model_ = model.model(conn)
     return_list = model_.tb_url_detail_select("inven", 10)
@@ -213,8 +204,8 @@ def ypim_crawler_inven10():
             inven_find(model_, j, i).start()
 
 def ypim_crawler_inven11():
-    db = db_conn.db_conn()
-    conn = db.db_conn()
+
+    conn = db_conn.db_conn()
 
     model_ = model.model(conn)
     return_list = model_.tb_url_detail_select("inven", 11)
@@ -229,9 +220,10 @@ def ypim_crawler_inven11():
         for j in url_list:
             inven_find(model_, j, i).start()
 
+
+
 def ypim_crawler_inven12():
-    db = db_conn.db_conn()
-    conn = db.db_conn()
+    conn = db_conn.db_conn()
 
     model_ = model.model(conn)
     return_list = model_.tb_url_detail_select("inven", 12)
@@ -264,6 +256,30 @@ def ypim_crawler_mlbpark():
     for i in board_list:
         mlbpark_find(i).start()
 
+def ypim_crawler_bing():
+
+    print "bing_run"
+    Thread(target=bing_find).start()
+
+
+def ypim_crawler_yahoo():
+
+    print "yahoo_run"
+    Thread(target=yahoo_find).start()
+
+def ypim_crawler_dotax():
+
+    print "dotax_run"
+    board_list = ["subject&query=", "writer&nickname="]
+    for i in board_list:
+        DOTAX_find(i).start()
+
+def ypim_crawler_jobkorea():
+    board_list = ["GI", "HRP", "HH", "GIInfo", "News"]
+    print "잡코리아_Run"
+    for i in board_list:
+        jobkorea_find(i).start()
+
 
 ### end
 
@@ -272,8 +288,8 @@ class ypim_crawler():
     def __init__(self, query_, page):
         self.page = page
         self.query = query_.encode("utf-8")
-        db = db_conn.db_conn()
-        self.conn= db.db_conn()
+
+        self.conn= db_conn.db_conn()
         self.db = model.model(self.conn)
         self.cnt = self.db.tb_detail_count(self.query)
 
@@ -285,8 +301,8 @@ class ypim_crawler():
         if(seq_que == None):
 
             self.db.tb_query_insert(self.query)
-            crawler_class_list = [ypim_crawler_mlbpark, ypim_crawler_dcinside, ypim_crawler_clien,ypim_crawler_ilbe, ypim_crawler_chosun, ypim_crawler_facebook, ypim_crawler_ppomppu, ypim_crawler_todayhumor, ypim_crawler_inven1, ypim_crawler_inven2, ypim_crawler_inven3, ypim_crawler_inven4, ypim_crawler_inven5, ypim_crawler_inven6, ypim_crawler_inven7, ypim_crawler_inven8, ypim_crawler_inven9, ypim_crawler_inven10, ypim_crawler_inven11, ypim_crawler_inven12]#[ypim_crawler_ilbe, ypim_crawler_chosun, ypim_crawler_facebook, ypim_crawler_ppomppu, ypim_crawler_todayhumor]  #ypim_crawler_ddanzi
-
+            crawler_class_list = [ypim_crawler_dotax,ypim_crawler_bing, ypim_crawler_yahoo, ypim_crawler_mlbpark, ypim_crawler_dcinside, ypim_crawler_clien,ypim_crawler_ilbe, ypim_crawler_chosun, ypim_crawler_facebook, ypim_crawler_ppomppu, ypim_crawler_todayhumor]#[ypim_crawler_ilbe, ypim_crawler_chosun, ypim_crawler_facebook, ypim_crawler_ppomppu, ypim_crawler_todayhumor]  #ypim_crawler_ddanzi
+            #, ypim_crawler_inven1, ypim_crawler_inven2, ypim_crawler_inven3, ypim_crawler_inven4, ypim_crawler_inven5, ypim_crawler_inven6, ypim_crawler_inven7, ypim_crawler_inven8, ypim_crawler_inven9, ypim_crawler_inven10, ypim_crawler_inven11, ypim_crawler_inven12
             try:
                 pool = mp.Pool(initializer=init, initargs=(self.query,))
                 for i in crawler_class_list:

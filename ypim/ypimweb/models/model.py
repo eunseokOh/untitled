@@ -79,8 +79,9 @@ class model():
                                      from tb_query
                                      where query = %s and
                                      input_date >= date_add(NOW(), interval -3 hour))
-                        and web_site = %s
-                         """
+                   and web_site = %s
+                   order by title desc
+                """
         query = query.encode('UTF-8').decode('latin-1')
         data = self.mysql_query(sql, (query,web_site))
 
@@ -98,6 +99,7 @@ class model():
     def tb_detail_insert(self, query, data):
 
         que_seqno = self.tb_query_select(query)[0]['que_seqno']
+
         #print que_seqno
         try:
             web_site = data['web_site'].encode('UTF-8').decode('latin-1')
@@ -120,7 +122,9 @@ class model():
     def tb_detail_select(self, que_seqno):
         sql = """select distinct href, det_seqno, que_seqno, title, img, web_site
                   from tb_detail
-                  where que_seqno = %s """
+                  where que_seqno = %s
+                  order by title
+                  """
 
         return self.mysql_query(sql, (que_seqno,))
 
@@ -131,8 +135,10 @@ class model():
         sql = """select distinct href, det_seqno, que_seqno, title, img, web_site
                   from tb_detail
                   where que_seqno = %s
-                  ORDER BY title
-                  LIMIT %s, 60"""
+                  ORDER BY title desc
+                  LIMIT %s, 60
+
+                  """
 
         return self.mysql_query(sql, (que_seqno, page))
 
